@@ -4,22 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>혼인신고 축하 포토 프레임</title>
-    <!-- 우아한 serif 폰트와 사랑스러운 sans-serif 폰트 불러오기 -->
+    <!-- 우아한 폰트 불러오기 -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Nanum+Gothic:wght@400;700&family=Namsan&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
-            background-color: #fdf6e3; /* 부드러운 크림색 배경 */
-            color: #3a1c0d; /* 깊은 브라운 색상 */
-            font-family: 'Namsan', sans-serif; /* 사랑스러운 산세리프 폰트 */
+            background-color: #111111; /* 인트로 화면을 위한 어두운 배경 */
+            color: #3a1c0d;
+            font-family: 'Namsan', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+        
+        /* 카메라 화면 켜졌을 때의 바디 배경 (고급스러운 크림색) */
+        body.app-active {
+            background-color: #fdf6e3; 
             background-image: radial-gradient(#ffffff 20%, transparent 20%);
             background-size: 15px 15px;
+        }
+
+        /* --- 인트로 화면 스타일 --- */
+        #intro-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111111;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+        .intro-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .intro-subtitle {
+            font-size: 1rem;
+            color: #aaaaaa;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .start-btn {
+            background-color: #ffffff;
+            color: #111111;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+        .intro-info {
+            font-size: 0.85rem;
+            color: #666666;
+            line-height: 1.5;
+        }
+
+        /* --- 카메라 앱 화면 스타일 --- */
+        #app-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
         #camera-wrapper {
             position: relative;
@@ -27,25 +94,24 @@
             max-width: 500px;
             aspect-ratio: 3/4;
             background: #000;
-            box-shadow: 0 10px 30px rgba(224, 176, 255, 0.3); /* 모브 핑크 색상 그림자 */
+            box-shadow: 0 10px 30px rgba(224, 176, 255, 0.3);
         }
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* 전면 카메라일 때 좌우 반전 효과를 위한 클래스 (JS에서 제어) */
             transform: scaleX(1);
         }
         .mirror {
             transform: scaleX(-1) !important;
         }
-        /* 화려하고 사랑스러운 오버레이 프레임 디자인 */
+        
+        /* 프레임 오버레이 디자인 */
         #frame-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             box-sizing: border-box;
             border: 15px solid transparent;
-            /* 모브 핑크에서 따뜻한 골드로 이어지는 은은한 그라데이션 */
             border-image: linear-gradient(135deg, #e0b0ff, #f0e68c, #ffd700, #ffb6c1) 1;
             pointer-events: none;
             display: flex;
@@ -54,11 +120,10 @@
             padding: 40px 20px;
             z-index: 10;
         }
-        /* 꽃무늬 선화 일러스트레이션 위치 설정 */
         .floral-art {
             position: absolute;
             font-size: 2rem;
-            color: rgba(224, 176, 255, 0.8); /* 모브 핑크 색상 */
+            color: rgba(224, 176, 255, 0.8);
             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
             z-index: 15;
             font-family: Arial, sans-serif;
@@ -72,28 +137,28 @@
 
         .header-text {
             text-align: center;
-            text-shadow: 2px 2px 5px rgba(253, 246, 227, 0.8); /* 크림색 배경과 조화되는 그림자 */
+            text-shadow: 2px 2px 5px rgba(253, 246, 227, 0.8);
             margin-top: 35px;
         }
         .header-text h1 {
             margin: 0;
             font-size: 2rem;
-            color: #d4af37; /* 은은한 로즈 골드 */
-            font-family: 'Playfair Display', serif; /* 우아한 세리프 폰트 */
+            color: #d4af37;
+            font-family: 'Playfair Display', serif;
             font-weight: 700;
             letter-spacing: 2px;
         }
         .header-text p {
             margin: 10px 0 0;
             font-size: 1.2rem;
-            color: #e0b0ff; /* 모브 핑크 */
+            color: #e0b0ff;
             font-weight: 400;
         }
         .footer-text {
             text-align: center;
-            text-shadow: 2px 2px 4px rgba(253, 246, 227, 0.8); /* 크림색 배경과 조화되는 그림자 */
+            text-shadow: 2px 2px 4px rgba(253, 246, 227, 0.8);
             font-size: 1.4rem;
-            color: #fdf6e3; /* 부드러운 크림색 */
+            color: #fdf6e3;
             font-weight: 700;
             margin-bottom: 10px;
         }
@@ -103,80 +168,111 @@
             display: flex;
             gap: 20px;
         }
-        button {
+        .btn-app {
             border: none;
             padding: 18px 30px;
-            border-radius: 50px; /* 더 둥글고 부드럽게 */
-            font-size: 1.2rem;
-            font-family: 'Namsan', sans-serif; /* 사랑스러운 산세리프 폰트 */
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-family: 'Namsan', sans-serif;
             font-weight: 700;
             cursor: pointer;
             transition: transform 0.2s, background-color 0.2s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        button:active {
+        .btn-app:active {
             transform: scale(0.95);
         }
         .switch-btn {
-            background: linear-gradient(135deg, #e0b0ff, #fdf6e3); /* 은은한 모브 핑크와 크림색 그라데이션 */
-            color: #4a0e4e; /* 깊은 퍼플 색상 */
-        }
-        .switch-btn:hover {
-            background-color: #fdf6e3;
+            background: linear-gradient(135deg, #e0b0ff, #fdf6e3);
+            color: #4a0e4e;
         }
         .capture-btn {
-            background: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 100%); /* 부드럽고 풍부한 핑크 그라데이션 */
-            color: #4a0e4e; /* 깊은 퍼플 색상 */
-        }
-        .capture-btn:hover {
-            background-color: #ffb6c1;
+            background: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 100%);
+            color: #4a0e4e;
         }
     </style>
 </head>
 <body>
 
-    <div id="camera-wrapper">
-        <video id="video" autoplay playsinline></video>
-        
-        <!-- 화면에 보여지는 프레임 및 정교한 꽃무늬 선화 일러스트레이션 -->
-        <div id="frame-overlay">
-            <div class="floral-art top-left">🌸🌿<span style="font-size:1.5rem">♥</span></div>
-            <div class="floral-art top-center">🌷</div>
-            <div class="floral-art top-right">♥<span style="font-size:1.5rem">🌿🌺</span></div>
-            
-            <div class="header-text">
-                <h1>혼인신고를 축하합니다</h1>
-                <p>오늘부터 우리는 하나 💍</p>
-            </div>
-            
-            <div class="floral-art bottom-center">♥🌼💐🌼♥</div>
-            <div class="footer-text">
-                부천시 원미구
-            </div>
-
-            <div class="floral-art bottom-left">🌺🍃<span style="font-size:1.5rem">♥</span></div>
-            <div class="floral-art bottom-right">♥<span style="font-size:1.5rem">🍃🌸</span></div>
+    <!-- 1. 첫 접속 시 보여지는 인트로 화면 -->
+    <div id="intro-screen">
+        <div class="intro-title">
+            💍 혼인신고를 축하드립니다
+        </div>
+        <div class="intro-subtitle">
+            두 분의 특별한 오늘을<br>축하 프레임과 함께 사진으로 남겨보세요.
+        </div>
+        <button class="start-btn" onclick="startApp()">카메라 시작하기</button>
+        <div class="intro-info">
+            카메라 사용 권한을 허용해 주세요.<br>사진은 촬영 후 휴대폰에 저장할 수 있습니다.
         </div>
     </div>
 
-    <div id="controls">
-        <button class="switch-btn" onclick="toggleCamera()">🔄 방향 전환</button>
-        <button class="capture-btn" onclick="takePhoto()">📸 하트 사진 저장</button>
+    <!-- 2. 시작하기 버튼 누르면 보여지는 실제 카메라 화면 -->
+    <div id="app-screen">
+        <div id="camera-wrapper">
+            <video id="video" autoplay playsinline></video>
+            
+            <div id="frame-overlay">
+                <div class="floral-art top-left">🌸🌿<span style="font-size:1.5rem">♥</span></div>
+                <div class="floral-art top-center">🌷</div>
+                <div class="floral-art top-right">♥<span style="font-size:1.5rem">🌿🌺</span></div>
+                
+                <div class="header-text">
+                    <h1>혼인신고를 축하합니다</h1>
+                    <p>오늘부터 우리는 하나 💍</p>
+                </div>
+                
+                <div class="floral-art bottom-center">♥🌼💐🌼♥</div>
+                <div class="footer-text">
+                    부천시 원미구
+                </div>
+
+                <div class="floral-art bottom-left">🌺🍃<span style="font-size:1.5rem">♥</span></div>
+                <div class="floral-art bottom-right">♥<span style="font-size:1.5rem">🍃🌸</span></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button class="btn-app switch-btn" onclick="toggleCamera()">🔄 방향 전환</button>
+            <button class="btn-app capture-btn" onclick="takePhoto()">📸 하트 사진 저장</button>
+        </div>
     </div>
 
     <script>
         const video = document.getElementById('video');
+        const introScreen = document.getElementById('intro-screen');
+        const appScreen = document.getElementById('app-screen');
+        
         let currentFacingMode = "environment"; // 기본값: 후면 카메라
         let stream = null;
 
+        // 시작하기 버튼 클릭 시 실행
+        function startApp() {
+            // 인트로 화면 서서히 사라지기
+            introScreen.style.opacity = '0';
+            
+            setTimeout(() => {
+                introScreen.style.display = 'none';
+                appScreen.style.display = 'flex';
+                document.body.classList.add('app-active'); // 밝은 배경으로 전환
+                
+                // 앱 화면 서서히 나타나기
+                setTimeout(() => {
+                    appScreen.style.opacity = '1';
+                }, 50);
+
+                // 카메라 켜기
+                startCamera();
+            }, 500);
+        }
+
         // 카메라 시작 함수
         async function startCamera() {
-            // 기존 카메라 실행 중이면 중지
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
 
-            // 전면 카메라인 경우 좌우 반전 클래스 추가
             if (currentFacingMode === "user") {
                 video.classList.add('mirror');
             } else {
@@ -194,12 +290,11 @@
                 });
                 video.srcObject = stream;
             } catch (err) {
-                alert("카메라를 실행할 수 없습니다. 권한 설정을 확인해주세요.");
+                alert("카메라를 실행할 수 없거나 권한이 거부되었습니다.\n브라우저 설정에서 카메라 권한을 허용해주세요.");
                 console.error(err);
             }
         }
 
-        // 전면/후면 전환 함수
         function toggleCamera() {
             currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
             startCamera();
@@ -211,20 +306,18 @@
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
 
-            // 1. 카메라 영상 그리기 (전면 카메라이면 좌우 반전해서 캡처)
             if (currentFacingMode === "user") {
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
             }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 반전 상태 원래대로 복구 (텍스트와 테두리는 똑바로 나와야 함)
             if (currentFacingMode === "user") {
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
             }
 
-            // 2. 화려한 테두리 그리기
+            // 테두리
             const padding = 30;
             ctx.lineWidth = 30;
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -235,59 +328,52 @@
             ctx.strokeStyle = gradient;
             ctx.strokeRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
 
-            // 3. 그림자 효과 설정
             ctx.shadowColor = "rgba(0,0,0,0.4)";
             ctx.shadowBlur = 10;
             ctx.shadowOffsetX = 3;
             ctx.shadowOffsetY = 3;
 
-            // 4. 꽃무늬 선화 일러스트레이션 그리기 (Arial 폰트로 그리기)
+            // 꽃 장식
             ctx.font = '70px Arial';
             ctx.fillStyle = "rgba(224, 176, 255, 0.8)";
             ctx.textAlign = 'left';
-            ctx.fillText('🌸🌿♥', padding + 15, padding + 70); // 좌상단
+            ctx.fillText('🌸🌿♥', padding + 15, padding + 70);
             ctx.textAlign = 'right';
-            ctx.fillText('♥🌿🌺', canvas.width - padding - 15, padding + 70); // 우상단
+            ctx.fillText('♥🌿🌺', canvas.width - padding - 15, padding + 70);
             ctx.textAlign = 'center';
-            ctx.fillText('🌷', canvas.width / 2, padding + 60); // 상단 중앙
+            ctx.fillText('🌷', canvas.width / 2, padding + 60);
             
             ctx.textAlign = 'left';
-            ctx.fillText('🌺🍃♥', padding + 15, canvas.height - padding - 20); // 좌하단
+            ctx.fillText('🌺🍃♥', padding + 15, canvas.height - padding - 20);
             ctx.textAlign = 'right';
-            ctx.fillText('♥🍃🌸', canvas.width - padding - 15, canvas.height - padding - 20); // 우하단
+            ctx.fillText('♥🍃🌸', canvas.width - padding - 15, canvas.height - padding - 20);
             
             ctx.font = '50px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('♥🌼💐🌼♥', canvas.width / 2, canvas.height - padding - 130); // 하단 중앙 꽃♥
+            ctx.fillText('♥🌼💐🌼♥', canvas.width / 2, canvas.height - padding - 130);
 
-            // 5. 텍스트 설정 및 그리기
+            // 텍스트
             ctx.textAlign = 'center';
             
-            // 상단 메인 타이틀
             ctx.font = 'bold 85px "Playfair Display", serif';
             ctx.fillStyle = '#d4af37';
             ctx.shadowColor = "rgba(253, 246, 227, 0.8)";
             ctx.fillText('혼인신고를 축하합니다', canvas.width / 2, padding + 180);
 
-            // 상단 서브 타이틀
             ctx.font = '45px "Namsan", sans-serif';
             ctx.fillStyle = '#e0b0ff';
             ctx.fillText('오늘부터 우리는 하나 💍', canvas.width / 2, padding + 260);
 
-            // 하단 기관명
             ctx.font = 'bold 55px "Namsan", sans-serif';
             ctx.fillStyle = '#fdf6e3';
             ctx.fillText('부천시 원미구', canvas.width / 2, canvas.height - padding - 60);
 
-            // 6. 이미지 다운로드 처리
+            // 다운로드
             const link = document.createElement('a');
             link.download = 'congratulations_photo.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
-
-        // 페이지 로드 시 카메라 자동 시작
-        window.addEventListener('load', startCamera);
     </script>
 </body>
 </html>
