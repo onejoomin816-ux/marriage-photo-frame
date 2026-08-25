@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>혼인신고 축하 프레임 | 부천시 원미구</title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;background:#111;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic",sans-serif}
+body{min-height:100vh}.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+.panel{width:min(100%,520px);text-align:center}.title{font-size:clamp(24px,7vw,36px);font-weight:800;letter-spacing:-1.5px;margin:0 0 10px}.sub{font-size:15px;line-height:1.6;color:#ddd;margin:0 0 24px}
+button{border:0;border-radius:999px;padding:15px 25px;font-size:17px;font-weight:700;cursor:pointer;background:#fff;color:#222}
+.camera{display:none;position:relative;width:min(100%,430px);aspect-ratio:9/16;background:#000;overflow:hidden;border-radius:20px;box-shadow:0 12px 45px #0008}
+video{position:absolute;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.frame{position:absolute;inset:0;pointer-events:none}
+.frame:before{content:"";position:absolute;inset:13px;border:2px solid rgba(255,255,255,.85);border-radius:18px}
+.top{position:absolute;top:34px;left:20px;right:20px;text-align:center;font-weight:800;font-size:22px;text-shadow:0 2px 7px #0008}
+.top small{display:block;font-size:12px;letter-spacing:1px;margin-top:5px;font-weight:600}
+.bottom{position:absolute;left:20px;right:20px;bottom:26px;text-align:center;text-shadow:0 2px 7px #0008}
+.bottom .message{font-size:16px;font-weight:700;margin-bottom:7px}.bottom .office{font-size:13px;font-weight:600;letter-spacing:1px}
+.flower{position:absolute;font-size:28px}.f1{top:20px;left:22px}.f2{top:20px;right:22px}.f3{bottom:85px;left:22px}.f4{bottom:85px;right:22px}
+.controls{display:none;gap:12px;margin-top:15px;justify-content:center}.controls button{min-width:120px}.secondary{background:#333;color:#fff}
+canvas{display:none}.result{display:none;text-align:center;width:min(100%,430px)}.result img{width:100%;border-radius:20px;display:block;margin-bottom:15px}
+.notice{font-size:12px;color:#aaa;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel" id="start">
+    <h1 class="title">💍 혼인신고를 축하드립니다</h1>
+    <p class="sub">두 분의 특별한 오늘을<br>축하 프레임과 함께 사진으로 남겨보세요.</p>
+    <button id="startBtn">카메라 시작하기</button>
+    <div class="notice">카메라 사용 권한을 허용해 주세요.<br>사진은 촬영 후 휴대폰에 저장할 수 있습니다.</div>
+  </div>
+
+  <div class="camera" id="camera">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="frame">
+      <div class="flower f1">✿</div><div class="flower f2">✿</div>
+      <div class="flower f3">♡</div><div class="flower f4">♡</div>
+      <div class="top">혼인신고를 축하드립니다<small>CONGRATULATIONS ON YOUR MARRIAGE</small></div>
+      <div class="bottom"><div class="message">오늘, 두 사람이 가족이 되는 날입니다 ♡</div><div class="office">부천시 원미구</div></div>
+    </div>
+  </div>
+
+  <div class="controls" id="controls">
+    <button id="shotBtn">📸 촬영</button>
+    <button class="secondary" id="stopBtn">카메라 끄기</button>
+  </div>
+
+  <div class="result" id="result">
+    <img id="photo" alt="혼인신고 축하 사진">
+    <button id="saveBtn">📥 사진 저장하기</button>
+    <button class="secondary" id="retryBtn" style="margin-left:7px">다시 촬영</button>
+    <div class="notice">※ 휴대폰 브라우저에 따라 저장 방식이 다를 수 있습니다.</div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+</div>
+<script>
+const start=document.getElementById('start'), camera=document.getElementById('camera'), controls=document.getElementById('controls'), result=document.getElementById('result');
+const video=document.getElementById('video'), canvas=document.getElementById('canvas'), photo=document.getElementById('photo');
+let stream=null, lastBlob=null;
+
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});
+    video.srcObject=stream;
+    start.style.display='none'; result.style.display='none'; camera.style.display='block'; controls.style.display='flex';
+  }catch(e){
+    alert('카메라를 사용할 수 없습니다. 브라우저의 카메라 권한을 허용했는지 확인해 주세요.\\n\\n※ 카메라는 HTTPS로 제공되는 웹페이지에서 정상 작동합니다.');
+  }
+}
+function stopCamera(){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  camera.style.display='none'; controls.style.display='none'; start.style.display='block';
+}
+function takePhoto(){
+  const w=video.videoWidth, h=video.videoHeight;
+  if(!w||!h)return;
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.save(); ctx.translate(w,0); ctx.scale(-1,1); ctx.drawImage(video,0,0,w,h); ctx.restore();
+
+  const sx=w/430, sy=h/(430*16/9);
+  // 프레임 합성
+  ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=Math.max(3,w/430*2);
+  const pad=Math.max(13*sx,13*sy); const r=18*sx;
+  roundRect(ctx,pad,pad,w-pad*2,h-pad*2,r); ctx.stroke();
+
+  ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=7;
+  ctx.font=`800 ${22*sx}px sans-serif`; ctx.fillText('혼인신고를 축하드립니다',w/2,58*sx);
+  ctx.font=`600 ${12*sx}px sans-serif`; ctx.fillText('CONGRATULATIONS ON YOUR MARRIAGE',w/2,80*sx);
+  ctx.font=`700 ${16*sx}px sans-serif`; ctx.fillText('오늘, 두 사람이 가족이 되는 날입니다 ♡',w/2,h-60*sx);
+  ctx.font=`600 ${13*sx}px sans-serif`; ctx.fillText('부천시 원미구',w/2,h-35*sx);
+  ctx.font=`28px sans-serif`; ctx.fillText('✿',30*sx,48*sx); ctx.fillText('✿',w-30*sx,48*sx); ctx.fillText('♡',30*sx,h-90*sx); ctx.fillText('♡',w-30*sx,h-90*sx);
+  ctx.shadowBlur=0;
+  canvas.toBlob(blob=>{
+    lastBlob=blob; photo.src=URL.createObjectURL(blob);
+    stopCamera(); result.style.display='block';
+  },'image/jpeg',.94);
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+document.getElementById('startBtn').onclick=startCamera;
+document.getElementById('shotBtn').onclick=takePhoto;
+document.getElementById('stopBtn').onclick=stopCamera;
+document.getElementById('retryBtn').onclick=()=>{result.style.display='none';startCamera()};
+document.getElementById('saveBtn').onclick=()=>{
+  if(!lastBlob)return;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(lastBlob); a.download='혼인신고_축하사진.jpg'; a.click();
+};
+</script>
+</body>
+</html>
