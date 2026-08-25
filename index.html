@@ -25,12 +25,17 @@
             max-width: 500px;
             aspect-ratio: 3/4;
             background: #000;
-            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.2);
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
         }
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            /* 전면 카메라일 때 좌우 반전 효과를 위한 클래스 (JS에서 제어) */
+            transform: scaleX(1);
+        }
+        .mirror {
+            transform: scaleX(-1) !important;
         }
         /* 화려한 오버레이 프레임 디자인 */
         #frame-overlay {
@@ -38,22 +43,37 @@
             top: 0; left: 0; width: 100%; height: 100%;
             box-sizing: border-box;
             border: 15px solid transparent;
-            border-image: linear-gradient(135deg, #f0e68c, #ffd700, #ffb6c1, #f0e68c) 1;
-            pointer-events: none; /* 터치 방해 금지 */
+            border-image: linear-gradient(135deg, #ffb6c1, #ffd700, #ffc0cb, #f0e68c) 1;
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 25px 15px;
+            padding: 30px 15px;
             z-index: 10;
         }
+        /* 꽃 장식 위치 설정 */
+        .floral-corner {
+            position: absolute;
+            font-size: 2rem;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+            z-index: 15;
+        }
+        .top-left { top: 15px; left: 15px; }
+        .top-right { top: 15px; right: 15px; }
+        .bottom-left { bottom: 15px; left: 15px; }
+        .bottom-right { bottom: 15px; right: 15px; }
+        .top-center { top: 15px; left: 50%; transform: translateX(-50%); }
+        .bottom-center { bottom: 65px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; }
+
         .header-text {
             text-align: center;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
+            margin-top: 35px;
         }
         .header-text h1 {
             margin: 0;
             font-size: 1.8rem;
-            color: #FFD700;
+            color: #FFDF00;
             font-weight: 700;
             letter-spacing: 2px;
         }
@@ -64,63 +84,96 @@
         }
         .footer-text {
             text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            font-size: 1.2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            font-size: 1.3rem;
             color: #ffffff;
             font-weight: 700;
+            margin-bottom: 10px;
         }
         #controls {
-            margin-top: 25px;
+            margin-top: 20px;
             z-index: 20;
+            display: flex;
+            gap: 15px; /* 버튼 사이 간격 */
+        }
+        button {
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-family: 'Gowun Batang', serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .switch-btn {
+            background: #ffffff;
+            color: #333;
         }
         .capture-btn {
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 1.3rem;
-            font-family: 'Gowun Batang', serif;
-            font-weight: 700;
             color: #333;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 154, 158, 0.4);
-            transition: transform 0.2s;
         }
-        .capture-btn:active {
-            transform: scale(0.95);
-        }
-    </style>
+    </script>
 </head>
 <body>
 
     <div id="camera-wrapper">
         <video id="video" autoplay playsinline></video>
         
-        <!-- 화면에 보여지는 프레임 장식 -->
+        <!-- 화면에 보여지는 프레임 및 꽃 장식 -->
         <div id="frame-overlay">
+            <div class="floral-corner top-left">🌸🌿</div>
+            <div class="floral-corner top-center">🌷</div>
+            <div class="floral-corner top-right">🌿🌺</div>
+            
             <div class="header-text">
                 <h1>혼인신고를 축하합니다</h1>
                 <p>오늘부터 우리는 하나 💍</p>
             </div>
+            
+            <div class="floral-corner bottom-center">🌼💐🌼</div>
             <div class="footer-text">
-                🌸 부천시 원미구 🌸
+                부천시 원미구
             </div>
+
+            <div class="floral-corner bottom-left">🌺🍃</div>
+            <div class="floral-corner bottom-right">🍃🌸</div>
         </div>
     </div>
 
     <div id="controls">
-        <button class="capture-btn" onclick="takePhoto()">📸 사진 촬영 및 저장</button>
+        <button class="switch-btn" onclick="toggleCamera()">🔄 방향 전환</button>
+        <button class="capture-btn" onclick="takePhoto()">📸 사진 저장</button>
     </div>
 
     <script>
         const video = document.getElementById('video');
+        let currentFacingMode = "environment"; // 기본값: 후면 카메라
+        let stream = null;
 
-        // 후면 카메라 우선 요청
+        // 카메라 시작 함수
         async function startCamera() {
+            // 기존 카메라 실행 중이면 중지
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            // 전면 카메라인 경우 좌우 반전 클래스 추가
+            if (currentFacingMode === "user") {
+                video.classList.add('mirror');
+            } else {
+                video.classList.remove('mirror');
+            }
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
+                stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
-                        facingMode: "environment", // 후면 카메라 지정
+                        facingMode: currentFacingMode,
                         width: { ideal: 1080 },
                         height: { ideal: 1440 }
                     },
@@ -128,54 +181,89 @@
                 });
                 video.srcObject = stream;
             } catch (err) {
-                alert("카메라를 실행할 수 없습니다. 브라우저 권한 설정을 확인해주세요.");
+                alert("카메라를 실행할 수 없습니다. 권한 설정을 확인해주세요.");
                 console.error(err);
             }
         }
 
+        // 전면/후면 전환 함수
+        function toggleCamera() {
+            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+            startCamera();
+        }
+
         function takePhoto() {
-            // 실제 이미지 크기에 맞게 캔버스 생성
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
 
-            // 1. 카메라 영상 그리기
+            // 1. 카메라 영상 그리기 (전면 카메라이면 좌우 반전해서 캡처)
+            if (currentFacingMode === "user") {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 2. 화려한 테두리 그리기 (HTML의 디자인을 캔버스에도 동일하게 적용)
+            // 반전 상태 원래대로 복구 (텍스트와 테두리는 똑바로 나와야 함)
+            if (currentFacingMode === "user") {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+
+            // 2. 화려한 테두리 그리기
             const padding = 30;
             ctx.lineWidth = 30;
             const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#f0e68c');
-            gradient.addColorStop(0.5, '#ffb6c1');
-            gradient.addColorStop(1, '#ffd700');
+            gradient.addColorStop(0, '#ffb6c1');
+            gradient.addColorStop(0.5, '#ffd700');
+            gradient.addColorStop(1, '#ffc0cb');
             ctx.strokeStyle = gradient;
             ctx.strokeRect(padding, padding, canvas.width - (padding*2), canvas.height - (padding*2));
 
-            // 3. 텍스트 설정 및 그리기
-            ctx.textAlign = 'center';
+            // 3. 그림자 효과 설정
             ctx.shadowColor = "rgba(0,0,0,0.7)";
             ctx.shadowBlur = 10;
             ctx.shadowOffsetX = 3;
             ctx.shadowOffsetY = 3;
 
+            // 4. 꽃 장식 그리기 (이모지)
+            ctx.font = '70px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('🌸🌿', padding + 15, padding + 70); // 좌상단
+            ctx.textAlign = 'right';
+            ctx.fillText('🌿🌺', canvas.width - padding - 15, padding + 70); // 우상단
+            ctx.textAlign = 'center';
+            ctx.fillText('🌷', canvas.width / 2, padding + 60); // 상단 중앙
+            
+            ctx.textAlign = 'left';
+            ctx.fillText('🌺🍃', padding + 15, canvas.height - padding - 20); // 좌하단
+            ctx.textAlign = 'right';
+            ctx.fillText('🍃🌸', canvas.width - padding - 15, canvas.height - padding - 20); // 우하단
+            
+            ctx.font = '50px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🌼💐🌼', canvas.width / 2, canvas.height - padding - 120); // 하단 중앙 꽃
+
+            // 5. 텍스트 설정 및 그리기
+            ctx.textAlign = 'center';
+            
             // 상단 메인 타이틀
-            ctx.font = 'bold 80px "Gowun Batang", serif';
-            ctx.fillStyle = '#FFD700';
-            ctx.fillText('혼인신고를 축하합니다', canvas.width / 2, padding + 120);
+            ctx.font = 'bold 75px "Gowun Batang", serif';
+            ctx.fillStyle = '#FFDF00';
+            ctx.fillText('혼인신고를 축하합니다', canvas.width / 2, padding + 160);
 
             // 상단 서브 타이틀
-            ctx.font = '45px "Gowun Batang", serif';
+            ctx.font = '40px "Gowun Batang", serif';
             ctx.fillStyle = '#FFF0F5';
-            ctx.fillText('오늘부터 우리는 하나 💍', canvas.width / 2, padding + 200);
+            ctx.fillText('오늘부터 우리는 하나 💍', canvas.width / 2, padding + 230);
 
             // 하단 기관명
             ctx.font = 'bold 50px "Gowun Batang", serif';
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillText('🌸 부천시 원미구 🌸', canvas.width / 2, canvas.height - padding - 60);
+            ctx.fillText('부천시 원미구', canvas.width / 2, canvas.height - padding - 50);
 
-            // 4. 이미지 다운로드 처리
+            // 6. 이미지 다운로드 처리
             const link = document.createElement('a');
             link.download = 'congratulations_photo.png';
             link.href = canvas.toDataURL('image/png');
