@@ -4,240 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>혼인신고 축하 포토 프레임 스튜디오</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --app-bg: #e9e5db;
-            --panel-bg: #fdfbf7;
-            --text-dark: #333333;
-        }
-
-        body {
-            margin: 0;
-            background-color: #111;
-            font-family: 'Noto Sans KR', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-            transition: background-color 0.5s ease;
-        }
-
-        body.app-active {
-            background-color: var(--app-bg);
+        /* 초기화 및 기본 화면 설정 */
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #111; color: #333; 
+            font-family: sans-serif; 
+            height: 100vh; /* 화면에 딱 맞게 고정 */
+            overflow: hidden; 
         }
 
         /* --- 인트로 화면 --- */
-        #intro-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            transition: opacity 0.5s ease;
-            text-align: center;
+        #intro-screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #111; color: #fff; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 100; text-align: center; padding: 20px;
         }
-        .intro-title { font-size: 2rem; font-weight: 700; margin-bottom: 15px; }
-        .intro-subtitle { font-size: 1.1rem; color: #ccc; margin-bottom: 40px; line-height: 1.6; }
-        .start-btn {
-            background-color: #fff; color: #111; border: none;
-            padding: 18px 40px; border-radius: 30px; font-size: 1.2rem;
-            font-weight: 700; cursor: pointer; transition: transform 0.2s;
+        .intro-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; }
+        .intro-subtitle { font-size: 1rem; color: #ccc; margin-bottom: 40px; line-height: 1.6; }
+        .start-btn { 
+            padding: 15px 35px; border-radius: 30px; border: none; background: #fff; color: #111;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;
         }
         .start-btn:active { transform: scale(0.95); }
 
-        /* --- 메인 에디터 화면 --- */
-        #editor-screen {
-            display: none;
-            width: 100%;
-            max-width: 1200px;
-            height: 90vh;
-            max-height: 850px;
-            background: var(--panel-bg);
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        @media (min-width: 768px) {
-            #editor-screen { flex-direction: row; }
+        /* --- 메인 에디터 화면 (버튼 안 짤리도록 레이아웃 수정) --- */
+        #editor-screen { 
+            display: none; flex-direction: column; 
+            width: 100%; height: 100%; background: #fdfbf7; 
         }
 
-        .app-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid #eee;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            display: none;
+        /* 상단/좌측 프레임 선택 썸네일 영역 */
+        .sidebar { 
+            flex: 0 0 auto; display: flex; overflow-x: auto; padding: 15px; 
+            background: #f8f6f0; border-bottom: 1px solid #e0ddd5; gap: 10px; 
         }
-        @media (min-width: 768px) {
-            .app-header { display: block; position: absolute; top: 0; left: 0; width: 100%; z-index: 10;}
+        .frame-thumb { 
+            flex: 0 0 75px; height: 110px; border-radius: 8px; border: 3px solid transparent; 
+            overflow: hidden; cursor: pointer; background: #fff; display: flex; justify-content: center;
         }
+        .frame-thumb.active { border-color: #333; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .frame-thumb img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* --- 좌측: 프레임 선택 패널 --- */
-        .sidebar {
-            flex: 0 0 380px;
-            background: #f8f6f0;
-            border-right: 1px solid #e0ddd5;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-            margin-top: 60px;
+        /* 가운데 사진 촬영 영역 */
+        .workspace { 
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            padding: 15px; overflow-y: auto; 
         }
-        @media (max-width: 767px) {
-            .sidebar {
-                flex: 0 0 150px; border-right: none; border-bottom: 1px solid #e0ddd5;
-                margin-top: 0; flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 10px;
-            }
+        #camera-wrapper { 
+            position: relative; width: 100%; max-width: 400px; max-height: 60vh; 
+            aspect-ratio: 2/3; background: #000; border-radius: 10px; 
+            overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            margin-bottom: 20px; 
         }
-        .sidebar-title {
-            font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: var(--text-dark);
-        }
-        @media (max-width: 767px) { .sidebar-title { display: none; } }
-        
-        .frame-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        @media (max-width: 767px) {
-            .frame-grid { display: flex; gap: 10px; }
-        }
-
-        .frame-thumb {
-            position: relative;
-            aspect-ratio: 2/3;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 3px solid transparent;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-            overflow: hidden;
-            background-color: #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @media (max-width: 767px) { .frame-thumb { min-width: 100px; } }
-        .frame-thumb:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
-        .frame-thumb.active { border-color: #333; box-shadow: 0 0 0 2px #333; }
-        
-        .frame-thumb img {
-            width: 100%; height: 100%; object-fit: contain;
-            display: block;
-        }
-
-        /* --- 우측: 캔버스 및 컨트롤 패널 --- */
-        .workspace {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: var(--panel-bg);
-            padding: 20px;
-        }
-
-        #camera-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 420px;
-            aspect-ratio: 2/3;
-            background: #000;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        video {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
-            transform: scaleX(1);
+        video { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; 
         }
         .mirror { transform: scaleX(-1) !important; }
-
-        /* 디자인 프레임 이미지가 비디오 위에 올라감 */
-        #frame-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 10;
-            object-fit: cover;
+        
+        /* 프레임 오버레이 */
+        #frame-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: fill; pointer-events: none; z-index: 10; 
         }
 
-        .controls {
-            margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
+        /* 하단 조작 버튼 영역 (항상 보이게 수정) */
+        .controls { 
+            flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; 
+            justify-content: center; width: 100%; padding-bottom: 20px; 
         }
-        .btn {
-            border: none; padding: 15px 25px; border-radius: 12px;
-            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        .btn { 
+            padding: 15px 20px; border-radius: 12px; font-size: 1rem; 
+            font-weight: bold; border: none; cursor: pointer; 
         }
-        .btn:active { transform: translateY(2px); }
         .btn-primary { background: #333; color: #fff; }
-        .btn-primary:hover { background: #000; }
-        .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
-        .btn-secondary:hover { background: #f0f0f0; }
+        .btn-secondary { background: #fff; border: 1px solid #ccc; color: #333;}
+        .btn:active { transform: translateY(2px); }
+
+        /* PC 화면용 넓은 레이아웃 */
+        @media (min-width: 768px) {
+            #editor-screen { flex-direction: row; }
+            .sidebar { flex: 0 0 300px; flex-direction: column; overflow-y: auto; overflow-x: hidden; border-right: 1px solid #e0ddd5; border-bottom: none; }
+            .frame-thumb { flex: 0 0 auto; width: 100%; height: auto; aspect-ratio: 2/3; margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. 인트로 화면 -->
     <div id="intro-screen">
         <div class="intro-title">💍 혼인신고 축하 포토 스튜디오</div>
         <div class="intro-subtitle">10가지 프레임 중 하나를 선택해 특별한 사진을 남겨보세요.</div>
         <button class="start-btn" onclick="startApp()">스튜디오 입장하기</button>
     </div>
 
-    <!-- 2. 에디터 화면 -->
     <div id="editor-screen">
-        <div class="app-header">혼인신고 축하 포토 프레임 스튜디오</div>
-        
-        <!-- 좌측 프레임 썸네일 선택기 -->
-        <div class="sidebar">
-            <div class="sidebar-title">프레임 선택</div>
-            <div class="frame-grid" id="frame-list">
-                <!-- JS에서 동적으로 10개의 썸네일 이미지 생성 -->
-            </div>
+        <!-- 프레임 선택 썸네일 -->
+        <div class="sidebar" id="frame-list">
+            <!-- JS에서 동적으로 생성 -->
         </div>
 
-        <!-- 우측 카메라 캔버스 -->
+        <!-- 카메라 및 조작 버튼 -->
         <div class="workspace">
             <div id="camera-wrapper">
                 <video id="video" autoplay playsinline></video>
-                
-                <!-- 실제 프레임 이미지 오버레이 -->
                 <img id="frame-overlay" src="prame1.png" alt="포토 프레임">
             </div>
 
+            <!-- 사라졌던 버튼 다시 복구 및 고정 -->
             <div class="controls">
                 <button class="btn btn-primary" onclick="takePhoto()">📸 사진 저장하기</button>
-                <button class="btn btn-secondary" onclick="toggleCamera()">🔄 방향 전환</button>
+                <button class="btn btn-secondary" onclick="toggleCamera()">🔄 전환</button>
                 <button class="btn btn-secondary" onclick="location.reload()">취소</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 준비된 10개의 프레임 파일명 적용 (올려주신 파일명과 동일하게 설정)
+        // 준비된 10개의 프레임 파일명 
         const frames = [
-            "prame1.png",
-            "prame2.png",
-            "prame3.png",
-            "prame4.jpg",
-            "prame5.png",
-            "prame6.png",
-            "prame7.png",
-            "prame8.png",
-            "prame9.png",
-            "prame10.png"
+            "prame1.png", "prame2.png", "prame3.png", "prame4.jpg", "prame5.png",
+            "prame6.png", "prame7.png", "prame8.png", "prame9.png", "prame10.png"
         ];
 
         let currentFrameIndex = 0;
@@ -248,13 +137,12 @@
         const overlayImg = document.getElementById('frame-overlay');
         const frameList = document.getElementById('frame-list');
 
-        // 1. 좌측 패널에 10개의 썸네일 불러오기
+        // 1. 썸네일 불러오기
         function initThumbnails() {
             frames.forEach((src, index) => {
                 const thumb = document.createElement('div');
                 thumb.className = `frame-thumb ${index === 0 ? 'active' : ''}`;
                 
-                // 썸네일에 프레임 이미지 넣기
                 const img = document.createElement('img');
                 img.src = src;
                 thumb.appendChild(img);
@@ -262,40 +150,39 @@
                 thumb.onclick = () => selectFrame(index);
                 frameList.appendChild(thumb);
             });
+            selectFrame(0); // 초기 프레임 설정
         }
 
-        // 2. 프레임 썸네일 클릭 시 변경
+        // 2. 프레임 선택 (투명화 마법 효과 적용)
         function selectFrame(index) {
             currentFrameIndex = index;
-            
-            // 오버레이 이미지 변경
             overlayImg.src = frames[index];
 
-            // UI 활성화 상태 업데이트
+            // ✨ 핵심: 막혀있는 흰색(또는 검정) 이미지를 뚫어주는 마법 효과 ✨
+            // prame4.jpg는 가운데가 검정색이므로 screen 적용, 나머지는 흰색이므로 multiply 적용
+            if (frames[index] === "prame4.jpg") {
+                overlayImg.style.mixBlendMode = "screen";
+            } else {
+                overlayImg.style.mixBlendMode = "multiply";
+            }
+
             document.querySelectorAll('.frame-thumb').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
             });
         }
 
-        // 3. 앱 시작 함수
+        // 3. 시작하기
         function startApp() {
-            document.getElementById('intro-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('intro-screen').style.display = 'none';
-                document.getElementById('editor-screen').style.display = 'flex';
-                document.body.classList.add('app-active');
-                
-                setTimeout(() => { document.getElementById('editor-screen').style.opacity = '1'; }, 50);
-                
-                initThumbnails();
-                startCamera();
-            }, 500);
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('editor-screen').style.display = 'flex';
+            
+            initThumbnails();
+            startCamera();
         }
 
-        // 4. 카메라 권한 및 스트림 제어
+        // 4. 카메라 제어
         async function startCamera() {
             if (stream) stream.getTracks().forEach(track => track.stop());
-            
             video.classList.toggle('mirror', currentFacingMode === "user");
 
             try {
@@ -305,7 +192,7 @@
                 });
                 video.srcObject = stream;
             } catch (err) {
-                alert("카메라를 실행할 수 없거나 권한이 거부되었습니다.");
+                alert("카메라 권한을 허용해주세요.");
             }
         }
 
@@ -314,17 +201,16 @@
             startCamera();
         }
 
-        // 5. 사진 촬영 후 이미지 합성 및 다운로드
+        // 5. 사진 찍기 (저장할 때도 투명화 효과 유지)
         function takePhoto() {
             const canvas = document.createElement('canvas');
-            // 고해상도 저장을 위해 캔버스 사이즈 설정
             const cw = video.videoWidth || 1080;
             const ch = video.videoHeight || 1440;
             canvas.width = cw; 
             canvas.height = ch;
             const ctx = canvas.getContext('2d');
 
-            // 1. 카메라 영상 그리기 (셀카모드 시 좌우 반전 적용)
+            // 1. 카메라 영상 먼저 그리기
             if (currentFacingMode === "user") {
                 ctx.translate(cw, 0); 
                 ctx.scale(-1, 1);
@@ -332,19 +218,28 @@
             ctx.drawImage(video, 0, 0, cw, ch);
             if (currentFacingMode === "user") {
                 ctx.translate(cw, 0); 
-                ctx.scale(-1, 1); // 다음 그리기를 위해 원상 복구
+                ctx.scale(-1, 1); 
             }
 
-            // 2. 투명 프레임 이미지 그 영상 위에 덮어 씌우기
+            // 2. 프레임 합성하기
             const frameImage = new Image();
-            frameImage.crossOrigin = "Anonymous"; // CORS 이슈 방지
+            frameImage.crossOrigin = "Anonymous";
             frameImage.src = frames[currentFrameIndex];
             
             frameImage.onload = () => {
-                // 영상 위에 프레임 이미지 렌더링
+                // ✨ 저장할 때도 꽉 막힌 배경을 투명하게 처리해주는 코드 ✨
+                if (frames[currentFrameIndex] === "prame4.jpg") {
+                    ctx.globalCompositeOperation = "screen";
+                } else {
+                    ctx.globalCompositeOperation = "multiply";
+                }
+                
                 ctx.drawImage(frameImage, 0, 0, cw, ch);
+                
+                // 설정 원상복구
+                ctx.globalCompositeOperation = "source-over";
 
-                // 3. 최종 합성 이미지 다운로드
+                // 사진 다운로드
                 const link = document.createElement('a');
                 link.download = `wedding_frame_${currentFrameIndex + 1}.png`;
                 link.href = canvas.toDataURL('image/png');
