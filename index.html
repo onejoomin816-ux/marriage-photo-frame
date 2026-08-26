@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>혼인신고 축하 포토 프레임</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,600&family=Noto+Sans+KR:wght@500;800&display=swap" rel="stylesheet">
     <style>
-        /* 초기화 및 기본 화면 설정 */
+        /* 기본 설정 */
         * { box-sizing: border-box; }
         body { 
             margin: 0; padding: 0; 
             background-color: #fdfbf7; color: #333; 
-            font-family: sans-serif; 
-            height: 100vh; /* 스마트폰 화면 높이에 딱 맞게 고정 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Noto Sans KR', sans-serif; 
+            height: 100vh; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
             overflow: hidden; 
         }
 
@@ -26,37 +25,26 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 100; text-align: center; padding: 20px;
         }
-        .intro-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; }
+        .intro-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 15px; }
         .intro-subtitle { font-size: 1rem; color: #ccc; margin-bottom: 40px; line-height: 1.6; }
         .start-btn { 
-            padding: 15px 35px; border-radius: 30px; border: none; background: #fff; color: #111;
+            padding: 15px 35px; border-radius: 30px; border: none; background: #ff4d85; color: #fff;
             font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;
         }
         .start-btn:active { transform: scale(0.95); }
 
         /* --- 메인 촬영 화면 --- */
         #app-screen { 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            width: 100%; height: 100%; 
-            padding: 20px;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; padding: 20px;
         }
 
-        /* 카메라 및 프레임 영역 */
+        /* 카메라 컨테이너 */
         #camera-wrapper { 
-            position: relative; 
-            width: 100%; 
-            max-width: 450px; 
-            /* 화면 비율에 맞춰 너무 길어지지 않도록 제한 */
-            max-height: 70vh; 
-            aspect-ratio: 2/3; 
-            background: #000; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
-            margin-bottom: 25px; 
+            position: relative; width: 100%; max-width: 450px; max-height: 70vh; 
+            aspect-ratio: 2/3; background: #000; overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); margin-bottom: 25px; 
+            border-radius: 10px;
         }
         
         video { 
@@ -64,44 +52,92 @@
         }
         .mirror { transform: scaleX(-1) !important; }
         
-        /* 프레임 오버레이 (하얀 배경을 자동으로 뚫어줌) */
-        #frame-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            object-fit: fill; pointer-events: none; z-index: 10; 
-            mix-blend-mode: multiply; /* 핵심: 하얀색을 투명하게 만들어주는 효과 */
+        /* 파일 없이 CSS로 구현한 오버레이 프레임 */
+        #frame-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden;
         }
 
-        /* 하단 조작 버튼 영역 (잘리지 않게 고정) */
+        /* 아치형 구멍 (박스 섀도우 트릭 활용) */
+        .arch-hole {
+            position: absolute; top: 22%; left: 8%; right: 8%; bottom: 12%;
+            border-radius: 150px 150px 0 0;
+            box-shadow: 0 0 0 2000px #ffd9e2; /* 핑크색 배경 역할 */
+            border: 4px solid #ffb6c1; /* 아치 테두리 */
+        }
+
+        /* 텍스트 장식 영역 */
+        .frame-text-top {
+            position: absolute; top: 3%; width: 100%; text-align: center; z-index: 11;
+        }
+        .en-title {
+            font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #ff3366;
+            margin: 0; font-style: italic; font-weight: 600;
+        }
+        .kr-title {
+            font-size: 2.8rem; font-weight: 800; color: #ff3366; margin: 0;
+            -webkit-text-stroke: 4px white; paint-order: stroke fill;
+            text-shadow: 0px 3px 5px rgba(0,0,0,0.1); line-height: 1.1;
+        }
+        .sub-title {
+            font-size: 0.9rem; font-weight: 800; color: #333; margin-top: 5px;
+        }
+
+        .frame-text-bottom {
+            position: absolute; bottom: 3%; width: 100%; text-align: center; z-index: 11;
+            font-size: 1.2rem; font-weight: 800; color: #111;
+        }
+
+        /* 꽃 장식 이모지 */
+        .decor { position: absolute; font-size: 3rem; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1)); z-index: 12;}
+        .decor-1 { bottom: 8%; left: 2%; }
+        .decor-2 { bottom: 8%; right: 2%; }
+        .decor-3 { top: 15%; left: 5%; font-size: 2rem;}
+        .decor-4 { top: 15%; right: 5%; font-size: 2.5rem;}
+
+        /* 하단 조작 버튼 영역 */
         .controls { 
-            display: flex; gap: 15px; flex-wrap: wrap; 
-            justify-content: center; width: 100%;
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;
         }
         .btn { 
             padding: 15px 25px; border-radius: 12px; font-size: 1.1rem; 
-            font-weight: bold; border: none; cursor: pointer; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .btn-primary { background: #333; color: #fff; }
         .btn-secondary { background: #fff; border: 1px solid #ddd; color: #333;}
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
     </style>
 </head>
 <body>
 
-    <!-- 1. 앱 시작 화면 -->
     <div id="intro-screen">
         <div class="intro-title">💍 혼인신고 기념 촬영</div>
-        <div class="intro-subtitle">아름다운 프레임과 함께 특별한 오늘을 남겨보세요.</div>
+        <div class="intro-subtitle">프레임 이미지 파일 없이 코드로만 작동하는 에디터입니다.</div>
         <button class="start-btn" onclick="startApp()">카메라 켜기</button>
     </div>
 
-    <!-- 2. 카메라 및 촬영 화면 -->
     <div id="app-screen">
         <div id="camera-wrapper">
             <video id="video" autoplay playsinline></video>
-            <!-- 올려주신 단일 프레임 파일 적용 -->
-            <img id="frame-overlay" src="prame1_2.png" alt="포토 프레임">
+            
+            <!-- 파일 대신 CSS로 디자인한 프레임 오버레이 -->
+            <div id="frame-overlay">
+                <div class="arch-hole"></div>
+                <div class="frame-text-top">
+                    <p class="en-title">Just Married ♡</p>
+                    <h1 class="kr-title">혼인신고 기념</h1>
+                    <p class="sub-title">우리의 새로운 시작을 축하합니다 ♥</p>
+                </div>
+                <div class="decor decor-1">🌸🌿</div>
+                <div class="decor decor-2">🌺🍃</div>
+                <div class="decor decor-3">💖</div>
+                <div class="decor decor-4">💕</div>
+                <div class="frame-text-bottom">
+                    <span>💙 부천시 원미구</span>
+                </div>
+            </div>
         </div>
 
         <div class="controls">
@@ -111,26 +147,18 @@
     </div>
 
     <script>
-        // 프레임 이미지 파일명 설정
-        const frameSrc = "prame1_2.png";
-        
         let stream = null;
-        let currentFacingMode = "user"; // 기본 모드: 셀카
-
+        let currentFacingMode = "user"; 
         const video = document.getElementById('video');
 
-        // 1. 앱 시작하기
         function startApp() {
             document.getElementById('intro-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
             startCamera();
         }
 
-        // 2. 카메라 켜기
         async function startCamera() {
             if (stream) stream.getTracks().forEach(track => track.stop());
-            
-            // 셀카 모드일 때만 거울처럼 좌우 반전
             video.classList.toggle('mirror', currentFacingMode === "user");
 
             try {
@@ -144,13 +172,12 @@
             }
         }
 
-        // 3. 전/후면 카메라 전환
         function toggleCamera() {
             currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
             startCamera();
         }
 
-        // 4. 사진 촬영 및 다운로드
+        // 사진 촬영 및 코드 기반 캔버스 드로잉
         function takePhoto() {
             const canvas = document.createElement('canvas');
             const cw = video.videoWidth || 1080;
@@ -159,36 +186,93 @@
             canvas.height = ch;
             const ctx = canvas.getContext('2d');
 
-            // 1. 카메라 영상 캔버스에 그리기
+            // 1. 카메라 영상 렌더링
             if (currentFacingMode === "user") {
-                ctx.translate(cw, 0); 
-                ctx.scale(-1, 1);
+                ctx.translate(cw, 0); ctx.scale(-1, 1);
             }
             ctx.drawImage(video, 0, 0, cw, ch);
             if (currentFacingMode === "user") {
-                ctx.translate(cw, 0); 
-                ctx.scale(-1, 1); // 다음 작업을 위해 원상복구
+                ctx.translate(cw, 0); ctx.scale(-1, 1); 
             }
 
-            // 2. 프레임 이미지 덧씌우기
-            const frameImage = new Image();
-            frameImage.crossOrigin = "Anonymous";
-            frameImage.src = frameSrc;
-            
-            frameImage.onload = () => {
-                // 하얀색 배경을 투명하게 날려주는 블렌드 모드 적용
-                ctx.globalCompositeOperation = "multiply";
-                ctx.drawImage(frameImage, 0, 0, cw, ch);
-                
-                // 설정 원상복구
-                ctx.globalCompositeOperation = "source-over";
+            // ==========================================
+            // 2. 프레임 이미지 파일 없이 캔버스에 직접 그리기
+            // ==========================================
 
-                // 3. 갤러리에 이미지 다운로드
-                const link = document.createElement('a');
-                link.download = `wedding_celebration.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            };
+            // A. 전체 핑크색 덮기
+            ctx.fillStyle = "#ffd9e2"; // 배경 핑크
+            ctx.fillRect(0, 0, cw, ch);
+
+            // B. 가운데 아치 모양으로 투명하게 뚫기 (사진이 보이게)
+            ctx.globalCompositeOperation = "destination-out";
+            
+            const archX = cw * 0.08;
+            const archW = cw * 0.84;
+            const archY = ch * 0.22;
+            const archH = ch * 0.66;
+            const archR = archW / 2; // 반경
+
+            ctx.beginPath();
+            ctx.moveTo(archX, archY + archH); // 왼쪽 아래
+            ctx.lineTo(archX, archY + archR); // 왼쪽 직선
+            ctx.arc(archX + archR, archY + archR, archR, Math.PI, 0, false); // 위쪽 반원
+            ctx.lineTo(archX + archW, archY + archH); // 오른쪽 아래로 직선
+            ctx.closePath();
+            ctx.fill();
+
+            // C. 아치 뚫은 후 모드 원상복구 및 테두리 그리기
+            ctx.globalCompositeOperation = "source-over";
+            
+            ctx.lineWidth = cw * 0.01;
+            ctx.strokeStyle = "#ffb6c1";
+            ctx.stroke(); // 테두리 선
+
+            // D. 상단 텍스트 그리기
+            ctx.textAlign = "center";
+            
+            // Just Married
+            ctx.font = `italic 600 ${ch * 0.04}px "Playfair Display", serif`;
+            ctx.fillStyle = "#ff3366";
+            ctx.fillText("Just Married ♡", cw / 2, ch * 0.07);
+
+            // 혼인신고 기념 (흰색 테두리 + 빨간 글씨)
+            ctx.font = `800 ${ch * 0.07}px "Noto Sans KR", sans-serif`;
+            ctx.lineWidth = cw * 0.02;
+            ctx.strokeStyle = "white";
+            ctx.strokeText("혼인신고 기념", cw / 2, ch * 0.14);
+            ctx.fillText("혼인신고 기념", cw / 2, ch * 0.14);
+
+            // 서브 타이틀
+            ctx.font = `800 ${ch * 0.022}px "Noto Sans KR", sans-serif`;
+            ctx.fillStyle = "#333333";
+            ctx.fillText("우리의 새로운 시작을 축하합니다 ♥", cw / 2, ch * 0.18);
+
+            // E. 하단 기관명
+            ctx.font = `800 ${ch * 0.03}px "Noto Sans KR", sans-serif`;
+            ctx.fillStyle = "#111111";
+            ctx.fillText("💙 부천시 원미구", cw / 2, ch * 0.95);
+
+            // F. 데코레이션 이모지 그리기
+            ctx.font = `${ch * 0.08}px sans-serif`;
+            ctx.textAlign = "left";
+            ctx.fillText("🌸🌿", cw * 0.02, ch * 0.9); // 좌측 하단
+            
+            ctx.textAlign = "right";
+            ctx.fillText("🌺🍃", cw * 0.98, ch * 0.9); // 우측 하단
+            
+            ctx.font = `${ch * 0.06}px sans-serif`;
+            ctx.textAlign = "left";
+            ctx.fillText("💖", cw * 0.05, ch * 0.18); // 좌측 상단 하트
+
+            ctx.font = `${ch * 0.07}px sans-serif`;
+            ctx.textAlign = "right";
+            ctx.fillText("💕", cw * 0.95, ch * 0.15); // 우측 상단 하트
+
+            // 3. 최종 저장
+            const link = document.createElement('a');
+            link.download = `wedding_celebration_nofile.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
     </script>
 </body>
