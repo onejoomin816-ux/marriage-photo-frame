@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>혼인신고 축하 포토 프레임 스튜디오</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --app-bg: #e9e5db; /* 레퍼런스 이미지의 따뜻한 배경색 */
+            --app-bg: #e9e5db;
             --panel-bg: #fdfbf7;
             --text-dark: #333333;
-            --primary: #4a4a4a;
         }
 
         body {
             margin: 0;
             background-color: #111;
-            font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
+            font-family: 'Noto Sans KR', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,7 +26,6 @@
 
         body.app-active {
             background-color: var(--app-bg);
-            background-image: none;
         }
 
         /* --- 인트로 화면 --- */
@@ -65,16 +63,14 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             opacity: 0;
             transition: opacity 0.5s ease;
-            overflow: hidden;
             flex-direction: column;
+            overflow: hidden;
         }
         
-        /* 모바일 및 데스크탑 레이아웃 분기 */
         @media (min-width: 768px) {
             #editor-screen { flex-direction: row; }
         }
 
-        /* 상단 헤더 (모바일용) */
         .app-header {
             padding: 20px 30px;
             border-bottom: 1px solid #eee;
@@ -96,7 +92,7 @@
             flex-direction: column;
             padding: 20px;
             overflow-y: auto;
-            margin-top: 60px; /* 헤더 공간 */
+            margin-top: 60px;
         }
         @media (max-width: 767px) {
             .sidebar {
@@ -120,30 +116,26 @@
 
         .frame-thumb {
             position: relative;
-            aspect-ratio: 3/4;
-            border-radius: 12px;
+            aspect-ratio: 2/3;
+            border-radius: 8px;
             cursor: pointer;
             border: 3px solid transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             transition: all 0.2s;
-            background-color: #fff;
             overflow: hidden;
-            text-align: center;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         @media (max-width: 767px) { .frame-thumb { min-width: 100px; } }
         .frame-thumb:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
         .frame-thumb.active { border-color: #333; box-shadow: 0 0 0 2px #333; }
         
-        .thumb-badge {
-            position: absolute; top: 8px; left: 8px;
-            background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: bold;
+        .frame-thumb img {
+            width: 100%; height: 100%; object-fit: contain;
+            display: block;
         }
-        .thumb-emoji { font-size: 2rem; margin-bottom: 10px; }
-        .thumb-name { font-size: 0.85rem; font-weight: 700; width: 90%; word-break: keep-all;}
 
         /* --- 우측: 캔버스 및 컨트롤 패널 --- */
         .workspace {
@@ -161,64 +153,32 @@
             position: relative;
             width: 100%;
             max-width: 420px;
-            aspect-ratio: 3/4;
+            aspect-ratio: 2/3;
             background: #000;
-            border-radius: 15px;
+            border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
+        
         video {
-            width: 100%; height: 100%; object-fit: cover;
-            transform: scaleX(1); /* Default */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+            transform: scaleX(1);
         }
         .mirror { transform: scaleX(-1) !important; }
 
-        /* 동적 프레임 오버레이 (CSS 트릭 사용) */
+        /* 디자인 프레임 이미지가 비디오 위에 올라감 */
         #frame-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none; overflow: hidden;
-            z-index: 10;
-            --bg: rgba(255, 230, 234, 0.95);
-            --border: #ffb3c6;
-            --text: #d6336c;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+            object-fit: cover;
         }
-        
-        /* 뚫려있는 중앙 구멍을 box-shadow로 구현 */
-        .hole {
-            position: absolute;
-            top: 40px; left: 30px; right: 30px; bottom: 130px;
-            box-shadow: 0 0 0 2000px var(--bg);
-            border: 3px solid var(--border);
-            transition: all 0.3s;
-        }
-        .shape-arch { border-radius: 200px 200px 0 0; }
-        .shape-rect { border-radius: 10px; }
-        .shape-oval { border-radius: 50%; }
 
-        /* 데코레이션 요소들 */
-        .decor-top { position: absolute; top: 10px; width: 100%; text-align: center; font-size: 2.2rem; filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2)); }
-        .decor-bot { position: absolute; bottom: 135px; width: 100%; text-align: center; font-size: 2.2rem; filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2)); z-index: 11;}
-        
-        .text-area {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: var(--text); z-index: 12;
-        }
-        .text-area h1 { margin: 0; font-size: 1.8rem; font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: 1px; }
-        .text-area p { margin: 5px 0 15px; font-size: 1rem; font-weight: 700; }
-        .text-area .logo { font-size: 0.9rem; font-weight: 700; opacity: 0.9; }
-
-        /* 컨트롤 버튼 그룹 */
         .controls {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
+            margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;
         }
         .btn {
             border: none; padding: 15px 25px; border-radius: 12px;
-            font-size: 1rem; font-weight: 700; font-family: inherit;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
         }
         .btn:active { transform: translateY(2px); }
         .btn-primary { background: #333; color: #fff; }
@@ -232,7 +192,7 @@
     <!-- 1. 인트로 화면 -->
     <div id="intro-screen">
         <div class="intro-title">💍 혼인신고 축하 포토 스튜디오</div>
-        <div class="intro-subtitle">10가지 다채로운 프레임 중 하나를 선택해<br>특별한 오늘을 사진으로 남겨보세요.</div>
+        <div class="intro-subtitle">10가지 프레임 중 하나를 선택해 특별한 사진을 남겨보세요.</div>
         <button class="start-btn" onclick="startApp()">스튜디오 입장하기</button>
     </div>
 
@@ -240,30 +200,21 @@
     <div id="editor-screen">
         <div class="app-header">혼인신고 축하 포토 프레임 스튜디오</div>
         
-        <!-- 좌측 프레임 선택기 -->
+        <!-- 좌측 프레임 썸네일 선택기 -->
         <div class="sidebar">
             <div class="sidebar-title">프레임 선택</div>
             <div class="frame-grid" id="frame-list">
-                <!-- JS에서 동적으로 프레임 썸네일 생성 -->
+                <!-- JS에서 동적으로 10개의 썸네일 이미지 생성 -->
             </div>
         </div>
 
-        <!-- 우측 촬영 캔버스 -->
+        <!-- 우측 카메라 캔버스 -->
         <div class="workspace">
             <div id="camera-wrapper">
                 <video id="video" autoplay playsinline></video>
                 
-                <!-- 동적 오버레이 -->
-                <div id="frame-overlay">
-                    <div class="hole shape-arch" id="overlay-hole"></div>
-                    <div class="decor-top" id="overlay-decor-top">🌸</div>
-                    <div class="decor-bot" id="overlay-decor-bot">🌷</div>
-                    <div class="text-area">
-                        <h1 id="overlay-title">혼인신고 기념</h1>
-                        <p id="overlay-sub">우리의 새로운 시작을 축하합니다♥</p>
-                        <div class="logo">부천시 원미구</div>
-                    </div>
-                </div>
+                <!-- 실제 프레임 이미지 오버레이 -->
+                <img id="frame-overlay" src="prame1.png" alt="포토 프레임">
             </div>
 
             <div class="controls">
@@ -275,75 +226,58 @@
     </div>
 
     <script>
-        // --- 프레임 10종 데이터 정의 ---
-        // 사용자가 첨부한 10종의 디자인 느낌을 최대한 반영한 CSS/Canvas 테마 데이터
+        // 준비된 10개의 프레임 파일명 적용 (올려주신 파일명과 동일하게 설정)
         const frames = [
-            { id: 1, name: "로맨틱 핑크", bg: "rgba(255, 230, 234, 0.95)", border: "#ffb3c6", text: "#d6336c", shape: "arch", top: "🌸", bot: "🌷" },
-            { id: 2, name: "블루밍 스카이", bg: "rgba(230, 242, 255, 0.95)", border: "#99c2ff", text: "#1c7ed6", shape: "rect", top: "🦋", bot: "💠" },
-            { id: 3, name: "골드 가랜드", bg: "rgba(253, 251, 247, 0.95)", border: "#f5c211", text: "#b08d00", shape: "rect", top: "🌿", bot: "✨" },
-            { id: 4, name: "포레스트 그린", bg: "rgba(235, 251, 238, 0.95)", border: "#8ce99a", text: "#2b8a3e", shape: "arch", top: "🍃", bot: "🍀" },
-            { id: 5, name: "퍼플 무드", bg: "rgba(243, 240, 255, 0.95)", border: "#d0bfff", text: "#6741d9", shape: "oval", top: "💜", bot: "🔮" },
-            { id: 6, name: "피치 썬셋", bg: "rgba(255, 240, 230, 0.95)", border: "#ffc078", text: "#d9480f", shape: "arch", top: "🍑", bot: "🧡" },
-            { id: 7, name: "스타리 나이트", bg: "rgba(0, 26, 51, 0.95)", border: "#ffd43b", text: "#fcc419", shape: "rect", top: "⭐", bot: "🌙" },
-            { id: 8, name: "옐로우 튤립", bg: "rgba(255, 249, 219, 0.95)", border: "#ffe066", text: "#e67700", shape: "rect", top: "🌻", bot: "💛" },
-            { id: 9, name: "스윗 클라우드", bg: "rgba(227, 250, 252, 0.95)", border: "#74c0fc", text: "#1864ab", shape: "rect", top: "☁️", bot: "✈️" },
-            { id: 10, name: "블랙 엘레강스", bg: "rgba(33, 37, 41, 0.95)", border: "#ced4da", text: "#f8f9fa", shape: "rect", top: "🖤", bot: "🌹" }
+            "prame1.png",
+            "prame2.png",
+            "prame3.png",
+            "prame4.jpg",
+            "prame5.png",
+            "prame6.png",
+            "prame7.png",
+            "prame8.png",
+            "prame9.png",
+            "prame10.png"
         ];
 
         let currentFrameIndex = 0;
         let stream = null;
-        let currentFacingMode = "user"; // 셀카 모드 기본
+        let currentFacingMode = "user"; // 기본 셀카 모드
 
         const video = document.getElementById('video');
-        const overlay = document.getElementById('frame-overlay');
-        const overlayHole = document.getElementById('overlay-hole');
+        const overlayImg = document.getElementById('frame-overlay');
         const frameList = document.getElementById('frame-list');
 
-        // 1. 초기 썸네일 리스트 생성
+        // 1. 좌측 패널에 10개의 썸네일 불러오기
         function initThumbnails() {
-            frames.forEach((frame, index) => {
+            frames.forEach((src, index) => {
                 const thumb = document.createElement('div');
                 thumb.className = `frame-thumb ${index === 0 ? 'active' : ''}`;
-                // 썸네일 스타일 적용
-                thumb.style.backgroundColor = frame.bg.replace('0.95', '1'); // 불투명하게
-                thumb.style.color = frame.text;
                 
-                thumb.innerHTML = `
-                    <div class="thumb-badge">${frame.id}</div>
-                    <div class="thumb-emoji">${frame.top}</div>
-                    <div class="thumb-name">${frame.name}</div>
-                `;
+                // 썸네일에 프레임 이미지 넣기
+                const img = document.createElement('img');
+                img.src = src;
+                thumb.appendChild(img);
                 
                 thumb.onclick = () => selectFrame(index);
                 frameList.appendChild(thumb);
             });
-            applyFrameToOverlay(0);
         }
 
-        // 2. 프레임 선택 시 오버레이 업데이트
+        // 2. 프레임 썸네일 클릭 시 변경
         function selectFrame(index) {
             currentFrameIndex = index;
-            const frame = frames[index];
+            
+            // 오버레이 이미지 변경
+            overlayImg.src = frames[index];
 
-            // 썸네일 액티브 상태 변경
+            // UI 활성화 상태 업데이트
             document.querySelectorAll('.frame-thumb').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
             });
-
-            // 오버레이 CSS 변수 업데이트
-            overlay.style.setProperty('--bg', frame.bg);
-            overlay.style.setProperty('--border', frame.border);
-            overlay.style.setProperty('--text', frame.text);
-            
-            // 모양 클래스 변경
-            overlayHole.className = `hole shape-${frame.shape}`;
-            
-            // 텍스트/이모지 업데이트
-            document.getElementById('overlay-decor-top').innerText = frame.top;
-            document.getElementById('overlay-decor-bot').innerText = frame.bot;
         }
 
-        // 3. 앱 시작 (카메라 권한 요청 및 화면 전환)
+        // 3. 앱 시작 함수
         function startApp() {
             document.getElementById('intro-screen').style.opacity = '0';
             setTimeout(() => {
@@ -358,7 +292,7 @@
             }, 500);
         }
 
-        // 4. 카메라 제어
+        // 4. 카메라 권한 및 스트림 제어
         async function startCamera() {
             if (stream) stream.getTracks().forEach(track => track.stop());
             
@@ -380,91 +314,42 @@
             startCamera();
         }
 
-        // 5. 사진 촬영 및 Canvas 렌더링 (핵심 기능)
+        // 5. 사진 촬영 후 이미지 합성 및 다운로드
         function takePhoto() {
             const canvas = document.createElement('canvas');
+            // 고해상도 저장을 위해 캔버스 사이즈 설정
             const cw = video.videoWidth || 1080;
             const ch = video.videoHeight || 1440;
-            canvas.width = cw; canvas.height = ch;
+            canvas.width = cw; 
+            canvas.height = ch;
             const ctx = canvas.getContext('2d');
-            const frame = frames[currentFrameIndex];
 
-            // A. 비디오 그리기 (거울모드 반영)
+            // 1. 카메라 영상 그리기 (셀카모드 시 좌우 반전 적용)
             if (currentFacingMode === "user") {
-                ctx.translate(cw, 0); ctx.scale(-1, 1);
+                ctx.translate(cw, 0); 
+                ctx.scale(-1, 1);
             }
             ctx.drawImage(video, 0, 0, cw, ch);
             if (currentFacingMode === "user") {
-                ctx.translate(cw, 0); ctx.scale(-1, 1); // 원상복구
+                ctx.translate(cw, 0); 
+                ctx.scale(-1, 1); // 다음 그리기를 위해 원상 복구
             }
 
-            // 비율에 따른 여백 계산 (화면상 보여지는 비율과 유사하게 조정)
-            const hX = cw * 0.08;
-            const hY = ch * 0.06;
-            const hW = cw - (hX * 2);
-            const hH = ch - (hY * 2) - (ch * 0.15); // 아래 텍스트 공간 확보
-
-            // B. 프레임 배경 그리기 (가운데 구멍 뚫기)
-            ctx.fillStyle = frame.bg;
-            ctx.fillRect(0, 0, cw, ch); // 전체 덮기
-
-            ctx.globalCompositeOperation = 'destination-out'; // 구멍 뚫기 모드
-            ctx.fillStyle = 'rgba(0,0,0,1)';
-            drawShapePath(ctx, frame.shape, hX, hY, hW, hH);
-            ctx.fill();
-
-            // C. 프레임 테두리 선 그리기
-            ctx.globalCompositeOperation = 'source-over'; // 기본 모드 복구
-            ctx.strokeStyle = frame.border;
-            ctx.lineWidth = 10;
-            drawShapePath(ctx, frame.shape, hX, hY, hW, hH);
-            ctx.stroke();
-
-            // D. 텍스트 및 데코레이션 그리기
-            ctx.fillStyle = frame.text;
-            ctx.textAlign = 'center';
+            // 2. 투명 프레임 이미지 그 영상 위에 덮어 씌우기
+            const frameImage = new Image();
+            frameImage.crossOrigin = "Anonymous"; // CORS 이슈 방지
+            frameImage.src = frames[currentFrameIndex];
             
-            // 제목
-            ctx.font = `bold ${cw * 0.06}px "Playfair Display", "Nanum Gothic", serif`;
-            ctx.fillText("혼인신고 기념", cw / 2, ch - (ch * 0.12));
-            
-            // 서브타이틀
-            ctx.font = `bold ${cw * 0.035}px "Noto Sans KR", sans-serif`;
-            ctx.fillText("우리의 새로운 시작을 축하합니다♥", cw / 2, ch - (ch * 0.07));
-            
-            // 로고
-            ctx.font = `bold ${cw * 0.025}px "Noto Sans KR", sans-serif`;
-            ctx.fillText("부천시 원미구", cw / 2, ch - (ch * 0.03));
+            frameImage.onload = () => {
+                // 영상 위에 프레임 이미지 렌더링
+                ctx.drawImage(frameImage, 0, 0, cw, ch);
 
-            // 이모지 (상단/하단)
-            ctx.font = `${cw * 0.08}px Arial`;
-            ctx.fillText(frame.top, cw / 2, hY + (cw * 0.02));
-            ctx.fillText(frame.bot, cw / 2, hY + hH + (cw * 0.02));
-
-            // E. 다운로드
-            const link = document.createElement('a');
-            link.download = `wedding_frame_${frame.id}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-
-        // 캔버스에 도형(구멍) 경로를 그리는 헬퍼 함수
-        function drawShapePath(ctx, shape, x, y, w, h) {
-            ctx.beginPath();
-            if (shape === 'rect') {
-                if (ctx.roundRect) ctx.roundRect(x, y, w, h, 20);
-                else ctx.rect(x, y, w, h);
-            } else if (shape === 'arch') {
-                const r = w / 2;
-                ctx.moveTo(x, y + h);
-                ctx.lineTo(x, y + r);
-                ctx.arc(x + r, y + r, r, Math.PI, 0, false);
-                ctx.lineTo(x + w, y + h);
-                ctx.closePath();
-            } else if (shape === 'oval') {
-                if(ctx.ellipse) ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI*2);
-                else ctx.rect(x, y, w, h); // Fallback
-            }
+                // 3. 최종 합성 이미지 다운로드
+                const link = document.createElement('a');
+                link.download = `wedding_frame_${currentFrameIndex + 1}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
         }
     </script>
 </body>
