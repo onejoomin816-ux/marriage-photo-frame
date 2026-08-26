@@ -1,611 +1,195 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>혼인신고 축하 포토 프레임</title>
+    <style>
+        /* 초기화 및 기본 화면 설정 */
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #fdfbf7; color: #333; 
+            font-family: sans-serif; 
+            height: 100vh; /* 스마트폰 화면 높이에 딱 맞게 고정 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+        }
 
-<title>혼인신고 기념 포토부스</title>
+        /* --- 인트로 화면 --- */
+        #intro-screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #111; color: #fff; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 100; text-align: center; padding: 20px;
+        }
+        .intro-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 15px; }
+        .intro-subtitle { font-size: 1rem; color: #ccc; margin-bottom: 40px; line-height: 1.6; }
+        .start-btn { 
+            padding: 15px 35px; border-radius: 30px; border: none; background: #fff; color: #111;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;
+        }
+        .start-btn:active { transform: scale(0.95); }
 
-<style>
-* {
-    box-sizing: border-box;
-}
+        /* --- 메인 촬영 화면 --- */
+        #app-screen { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            width: 100%; height: 100%; 
+            padding: 20px;
+        }
 
-body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family:
-        Arial,
-        "Noto Sans KR",
-        sans-serif;
-}
+        /* 카메라 및 프레임 영역 */
+        #camera-wrapper { 
+            position: relative; 
+            width: 100%; 
+            max-width: 450px; 
+            /* 화면 비율에 맞춰 너무 길어지지 않도록 제한 */
+            max-height: 70vh; 
+            aspect-ratio: 2/3; 
+            background: #000; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+            margin-bottom: 25px; 
+        }
+        
+        video { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; 
+        }
+        .mirror { transform: scaleX(-1) !important; }
+        
+        /* 프레임 오버레이 (하얀 배경을 자동으로 뚫어줌) */
+        #frame-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: fill; pointer-events: none; z-index: 10; 
+            mix-blend-mode: multiply; /* 핵심: 하얀색을 투명하게 만들어주는 효과 */
+        }
 
-h1 {
-    text-align: center;
-    margin: 20px 0 10px;
-}
+        /* 하단 조작 버튼 영역 (잘리지 않게 고정) */
+        .controls { 
+            display: flex; gap: 15px; flex-wrap: wrap; 
+            justify-content: center; width: 100%;
+        }
+        .btn { 
+            padding: 15px 25px; border-radius: 12px; font-size: 1.1rem; 
+            font-weight: bold; border: none; cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-primary { background: #333; color: #fff; }
+        .btn-secondary { background: #fff; border: 1px solid #ddd; color: #333;}
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
-}
-
-.camera-area {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    margin: auto;
-    aspect-ratio: 3 / 4;
-    background: black;
-    overflow: hidden;
-    border-radius: 20px;
-}
-
-/* 카메라 */
-#camera {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* 선택된 프레임 */
-#frame {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-/* 버튼 */
-.buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin: 15px 0;
-}
-
-button {
-    border: none;
-    border-radius: 12px;
-    padding: 14px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-#capture {
-    background: #ffffff;
-    color: #111;
-}
-
-#switchCamera {
-    background: #444;
-    color: white;
-}
-
-/* 프레임 선택 */
-.frame-title {
-    text-align: center;
-    margin-top: 25px;
-}
-
-.frames {
-    display: grid;
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 10px;
-
-    max-width: 700px;
-    margin: 15px auto;
-}
-
-.frame-button {
-    padding: 0;
-    background: #222;
-    border: 3px solid transparent;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.frame-button.selected {
-    border-color: #4d8dff;
-}
-
-.frame-button img {
-    display: block;
-    width: 100%;
-    height: auto;
-}
-
-/* 촬영 결과 */
-.result {
-    display: none;
-    max-width: 600px;
-    margin: 30px auto;
-}
-
-.result img {
-    width: 100%;
-    border-radius: 15px;
-}
-
-.download {
-    display: block;
-    margin-top: 15px;
-    padding: 15px;
-    background: white;
-    color: black;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: bold;
-}
-</style>
+    </style>
 </head>
-
-
 <body>
 
-<h1>💍 혼인신고 기념 포토부스</h1>
-
-<div class="container">
-
-    <!-- 카메라 -->
-    <div class="camera-area">
-
-        <video
-            id="camera"
-            autoplay
-            playsinline>
-        </video>
-
-        <img
-            id="frame"
-            src="혼인신고_포토프레임_01.png">
-
+    <!-- 1. 앱 시작 화면 -->
+    <div id="intro-screen">
+        <div class="intro-title">💍 혼인신고 기념 촬영</div>
+        <div class="intro-subtitle">아름다운 프레임과 함께 특별한 오늘을 남겨보세요.</div>
+        <button class="start-btn" onclick="startApp()">카메라 켜기</button>
     </div>
 
+    <!-- 2. 카메라 및 촬영 화면 -->
+    <div id="app-screen">
+        <div id="camera-wrapper">
+            <video id="video" autoplay playsinline></video>
+            <!-- 올려주신 단일 프레임 파일 적용 -->
+            <img id="frame-overlay" src="prame1_2.png" alt="포토 프레임">
+        </div>
 
-    <!-- 카메라 버튼 -->
-    <div class="buttons">
-
-        <button
-            id="switchCamera">
-            🔄 전면 / 후면
-        </button>
-
-        <button
-            id="capture">
-            📸 촬영
-        </button>
-
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="toggleCamera()">🔄 방향 전환</button>
+            <button class="btn btn-primary" onclick="takePhoto()">📸 사진 저장하기</button>
+        </div>
     </div>
 
+    <script>
+        // 프레임 이미지 파일명 설정
+        const frameSrc = "prame1_2.png";
+        
+        let stream = null;
+        let currentFacingMode = "user"; // 기본 모드: 셀카
 
-    <!-- 프레임 선택 -->
-    <h2 class="frame-title">
-        프레임 선택
-    </h2>
+        const video = document.getElementById('video');
 
-    <div
-        class="frames"
-        id="frames">
-    </div>
-
-
-    <!-- 결과 -->
-    <div
-        class="result"
-        id="result">
-
-        <img
-            id="resultImage">
-
-        <a
-            id="download"
-            class="download"
-            download="혼인신고_기념사진.png">
-            ⬇️ 사진 저장
-        </a>
-
-    </div>
-
-</div>
-
-
-<script>
-
-/* =========================
-   프레임 목록
-========================= */
-
-const frameFiles = [
-    "혼인신고_포토프레임_01.png",
-    "혼인신고_포토프레임_02.png",
-    "혼인신고_포토프레임_03.png",
-    "혼인신고_포토프레임_04.png",
-    "혼인신고_포토프레임_05.png",
-    "혼인신고_포토프레임_06.png",
-    "혼인신고_포토프레임_07.png",
-    "혼인신고_포토프레임_08.png",
-    "혼인신고_포토프레임_09.png"
-];
-
-
-/* =========================
-   기본 설정
-========================= */
-
-const video =
-    document.getElementById("camera");
-
-const frame =
-    document.getElementById("frame");
-
-const capture =
-    document.getElementById("capture");
-
-const switchCamera =
-    document.getElementById("switchCamera");
-
-const frames =
-    document.getElementById("frames");
-
-const result =
-    document.getElementById("result");
-
-const resultImage =
-    document.getElementById("resultImage");
-
-const download =
-    document.getElementById("download");
-
-
-let currentFrame = 0;
-
-let cameraMode = "user";
-
-let stream = null;
-
-
-/* =========================
-   프레임 선택 버튼 생성
-========================= */
-
-frameFiles.forEach(
-    (file, index) => {
-
-        const button =
-            document.createElement("button");
-
-        button.className =
-            "frame-button";
-
-        if (index === 0) {
-            button.classList.add(
-                "selected"
-            );
+        // 1. 앱 시작하기
+        function startApp() {
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            startCamera();
         }
 
-        const image =
-            document.createElement("img");
+        // 2. 카메라 켜기
+        async function startCamera() {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            
+            // 셀카 모드일 때만 거울처럼 좌우 반전
+            video.classList.toggle('mirror', currentFacingMode === "user");
 
-        image.src = file;
-
-        button.appendChild(image);
-
-        button.onclick = () => {
-
-            currentFrame = index;
-
-            frame.src = file;
-
-            document
-                .querySelectorAll(
-                    ".frame-button"
-                )
-                .forEach(
-                    b =>
-                    b.classList.remove(
-                        "selected"
-                    )
-                );
-
-            button.classList.add(
-                "selected"
-            );
-        };
-
-        frames.appendChild(button);
-    }
-);
-
-
-/* =========================
-   카메라 시작
-========================= */
-
-async function startCamera() {
-
-    /* 기존 카메라 종료 */
-
-    if (stream) {
-
-        stream
-            .getTracks()
-            .forEach(
-                track =>
-                track.stop()
-            );
-    }
-
-
-    try {
-
-        stream =
-            await navigator
-                .mediaDevices
-                .getUserMedia({
-
-                    video: {
-
-                        facingMode:
-                            cameraMode,
-
-                        width: {
-                            ideal: 1080
-                        },
-
-                        height: {
-                            ideal: 1440
-                        }
-
-                    },
-
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode, width: { ideal: 1080 }, height: { ideal: 1440 } },
                     audio: false
                 });
-
-
-        video.srcObject =
-            stream;
-
-
-        await video.play();
-
-    } catch (error) {
-
-        alert(
-            "카메라를 사용할 수 없습니다.\n" +
-            "브라우저에서 카메라 권한을 허용해주세요."
-        );
-
-        console.error(error);
-    }
-}
-
-
-/* =========================
-   전면 / 후면 전환
-========================= */
-
-switchCamera.onclick =
-    async () => {
-
-        if (cameraMode === "user") {
-
-            cameraMode =
-                "environment";
-
-        } else {
-
-            cameraMode =
-                "user";
+                video.srcObject = stream;
+            } catch (err) {
+                alert("카메라 권한을 허용해주세요.");
+            }
         }
 
-        await startCamera();
-    };
+        // 3. 전/후면 카메라 전환
+        function toggleCamera() {
+            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+            startCamera();
+        }
 
+        // 4. 사진 촬영 및 다운로드
+        function takePhoto() {
+            const canvas = document.createElement('canvas');
+            const cw = video.videoWidth || 1080;
+            const ch = video.videoHeight || 1440;
+            canvas.width = cw; 
+            canvas.height = ch;
+            const ctx = canvas.getContext('2d');
 
-/* =========================
-   촬영
-========================= */
+            // 1. 카메라 영상 캔버스에 그리기
+            if (currentFacingMode === "user") {
+                ctx.translate(cw, 0); 
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(video, 0, 0, cw, ch);
+            if (currentFacingMode === "user") {
+                ctx.translate(cw, 0); 
+                ctx.scale(-1, 1); // 다음 작업을 위해 원상복구
+            }
 
-capture.onclick = () => {
+            // 2. 프레임 이미지 덧씌우기
+            const frameImage = new Image();
+            frameImage.crossOrigin = "Anonymous";
+            frameImage.src = frameSrc;
+            
+            frameImage.onload = () => {
+                // 하얀색 배경을 투명하게 날려주는 블렌드 모드 적용
+                ctx.globalCompositeOperation = "multiply";
+                ctx.drawImage(frameImage, 0, 0, cw, ch);
+                
+                // 설정 원상복구
+                ctx.globalCompositeOperation = "source-over";
 
-    if (!video.videoWidth) {
-
-        alert(
-            "카메라가 아직 준비되지 않았습니다."
-        );
-
-        return;
-    }
-
-
-    const canvas =
-        document.createElement("canvas");
-
-
-    const width = 1080;
-    const height = 1440;
-
-
-    canvas.width = width;
-    canvas.height = height;
-
-
-    const ctx =
-        canvas.getContext("2d");
-
-
-    /*
-       카메라 화면을
-       1080 × 1440에 맞춰 채움
-    */
-
-    const videoRatio =
-        video.videoWidth /
-        video.videoHeight;
-
-    const canvasRatio =
-        width / height;
-
-
-    let sx = 0;
-    let sy = 0;
-
-    let sw =
-        video.videoWidth;
-
-    let sh =
-        video.videoHeight;
-
-
-    if (
-        videoRatio >
-        canvasRatio
-    ) {
-
-        sw =
-            video.videoHeight *
-            canvasRatio;
-
-        sx =
-            (video.videoWidth - sw)
-            / 2;
-
-    } else {
-
-        sh =
-            video.videoWidth /
-            canvasRatio;
-
-        sy =
-            (video.videoHeight - sh)
-            / 2;
-    }
-
-
-    /*
-       전면 카메라는
-       거울처럼 좌우 반전
-    */
-
-    if (
-        cameraMode === "user"
-    ) {
-
-        ctx.save();
-
-        ctx.translate(
-            width,
-            0
-        );
-
-        ctx.scale(
-            -1,
-            1
-        );
-
-        ctx.drawImage(
-            video,
-            sx,
-            sy,
-            sw,
-            sh,
-            0,
-            0,
-            width,
-            height
-        );
-
-        ctx.restore();
-
-    } else {
-
-        ctx.drawImage(
-            video,
-            sx,
-            sy,
-            sw,
-            sh,
-            0,
-            0,
-            width,
-            height
-        );
-    }
-
-
-    /*
-       선택한 프레임을
-       카메라 위에 합성
-    */
-
-    const overlay =
-        new Image();
-
-
-    overlay.onload =
-        () => {
-
-            ctx.drawImage(
-                overlay,
-                0,
-                0,
-                width,
-                height
-            );
-
-
-            /*
-               PNG로 변환
-            */
-
-            const image =
-                canvas.toDataURL(
-                    "image/png"
-                );
-
-
-            /*
-               결과 표시
-            */
-
-            resultImage.src =
-                image;
-
-
-            download.href =
-                image;
-
-
-            result.style.display =
-                "block";
-        };
-
-
-    overlay.src =
-        frameFiles[
-            currentFrame
-        ];
-};
-
-
-/* =========================
-   처음 카메라 실행
-========================= */
-
-startCamera();
-
-</script>
-
+                // 3. 갤러리에 이미지 다운로드
+                const link = document.createElement('a');
+                link.download = `wedding_celebration.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+        }
+    </script>
 </body>
 </html>
